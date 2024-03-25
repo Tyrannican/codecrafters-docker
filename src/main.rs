@@ -47,6 +47,12 @@ fn main() -> Result<()> {
                     )
                 })?;
 
+            let status = exec.status;
+            let exit_code = status.code().unwrap_or(1);
+
+            if !status.success() {
+                std::process::exit(exit_code);
+            }
             let mut stdout = std::io::stdout();
             let mut stderr = std::io::stderr();
             stdout
@@ -55,8 +61,7 @@ fn main() -> Result<()> {
             stderr
                 .write(&exec.stderr)
                 .context("command stderr output")?;
+            std::process::exit(exit_code);
         }
     }
-
-    Ok(())
 }

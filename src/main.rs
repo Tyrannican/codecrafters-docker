@@ -1,23 +1,22 @@
-use std::io::Write;
-
-use anyhow::{Context, Result};
-
+use anyhow::Result;
 use clap::{Args, Parser, Subcommand};
+
+mod runner;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
-struct Cli {
+pub(crate) struct Cli {
     #[command(subcommand)]
     command: Commands,
 }
 
 #[derive(Subcommand, Debug)]
-enum Commands {
-    Run(RunArgs),
+pub(crate) enum Commands {
+    Run(ExecArgs),
 }
 
 #[derive(Args, Debug)]
-struct RunArgs {
+pub(crate) struct ExecArgs {
     /// Image to run
     image: String,
 
@@ -33,35 +32,6 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Run(args) => {
-            let command = args.command;
-            let command_args = args.args;
-
-            let exec = std::process::Command::new(&command)
-                .args(&command_args)
-                .output()
-                .with_context(|| {
-                    format!(
-                        "Running command {:?} with arguments {:?}",
-                        &command, &command_args
-                    )
-                })?;
-
-            let status = exec.status;
-            let exit_code = status.code().unwrap_or(1);
-
-            if !status.success() {
-                std::process::exit(exit_code);
-            }
-            let mut stdout = std::io::stdout();
-            let mut stderr = std::io::stderr();
-            stdout
-                .write_all(&exec.stdout)
-                .context("command stdout response")?;
-            stderr
-                .write(&exec.stderr)
-                .context("command stderr output")?;
-            std::process::exit(exit_code);
-        }
+        Commands::Run(args) => runner::run_command(&args.command, &args.args),
     }
 }

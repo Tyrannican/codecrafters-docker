@@ -12,10 +12,12 @@ fn setup_chroot(dir: &str, command: &str) -> Result<()> {
     let root = tmp_dir.join(dir);
     let dev = root.join("dev");
     let bin = root.join("usr/local/bin");
+    let proc = root.join("proc");
 
     std::fs::create_dir_all(&root).context("creating root directory")?;
     std::fs::create_dir_all(&dev).context("creating dev directory")?;
     std::fs::create_dir_all(&bin).context("creating bin directory")?;
+    std::fs::create_dir_all(&proc).context("creating proc directory")?;
 
     let Some(bin_name) = command.split('/').last() else {
         anyhow::bail!("need a binary name");
@@ -27,6 +29,11 @@ fn setup_chroot(dir: &str, command: &str) -> Result<()> {
 
     fs::chroot(&root).context("chrooting")?;
     std::env::set_current_dir("/").context("setting current directory to chroot")?;
+
+    // Safety: Executed in isolated env...?
+    unsafe {
+        libc::unshare(libc::CLONE_NEWPID);
+    }
 
     Ok(())
 }

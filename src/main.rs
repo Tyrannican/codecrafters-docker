@@ -7,6 +7,9 @@ mod runner;
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 pub(crate) struct Cli {
+    #[arg(short)]
+    config: String,
+
     #[command(subcommand)]
     command: Commands,
 }
@@ -14,6 +17,8 @@ pub(crate) struct Cli {
 #[derive(Subcommand, Debug)]
 pub(crate) enum Commands {
     Run(ExecArgs),
+
+    /// This is to debug the image manifest getting
     Image(DebugArgs),
 }
 
@@ -38,12 +43,18 @@ pub(crate) struct DebugArgs {
 // Usage: your_docker.sh run <image> <command> <arg1> <arg2> ...
 fn main() -> Result<()> {
     let cli = Cli::parse();
+    println!("CLI: {cli:?}");
 
     match cli.command {
-        Commands::Run(args) => runner::run_command(&args.command, &args.args),
+        Commands::Run(args) => {
+            let is = image::ImageService::new(&args.image);
+            is.get_image_manifest()?;
+            runner::run_command(&args.command, &args.args)?;
+            Ok(())
+        }
         Commands::Image(args) => {
-            let is = image::ImageService::new(&args.image)?;
-            println!("Image: {}, Auth: {}", is.image, is.auth.token);
+            let is = image::ImageService::new(&args.image);
+            is.get_image_manifest()?;
             Ok(())
         }
     }

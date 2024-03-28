@@ -31,6 +31,7 @@ fn setup_chroot(dir: &str, command: &str) -> Result<()> {
     std::env::set_current_dir("/").context("setting current directory to chroot")?;
 
     // Safety: Executed in isolated env...?
+    // Tbh, i haven't a clue how this works but it does
     unsafe {
         libc::unshare(libc::CLONE_NEWPID);
     }

@@ -18,7 +18,7 @@ fn setup_chroot(dir: &str, image: &str, command: &str) -> Result<()> {
     std::fs::create_dir_all(&root).context("creating root directory")?;
     std::fs::create_dir_all(&dev).context("creating dev directory")?;
     std::fs::create_dir_all(&bin).context("creating bin directory")?;
-    std::fs::create_dir_all(&proc).context("creating proc directory")?;
+    std::fs::create_dir_all(proc).context("creating proc directory")?;
 
     let Some(bin_name) = command.split('/').last() else {
         anyhow::bail!("need a binary name");
@@ -26,7 +26,7 @@ fn setup_chroot(dir: &str, image: &str, command: &str) -> Result<()> {
     let mut null = std::fs::File::create(dev.join("null")).context("creating /dev/null")?;
     null.write_all(b"nothing").context("filling /dev/null")?;
 
-    std::fs::copy(&command, bin.join(&bin_name)).context("copying binary over")?;
+    std::fs::copy(command, bin.join(bin_name)).context("copying binary over")?;
 
     let is = ImageService::new(image);
     is.download_image(&root)
@@ -45,7 +45,7 @@ fn setup_chroot(dir: &str, image: &str, command: &str) -> Result<()> {
 
 pub(crate) fn run_command(image: &str, command: &str, command_args: &[String]) -> Result<()> {
     setup_chroot("dockersandbox", image, command)?;
-    let exec = std::process::Command::new(&command)
+    let exec = std::process::Command::new(command)
         .args(command_args)
         .output()
         .with_context(|| {

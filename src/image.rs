@@ -102,7 +102,7 @@ impl ImageService {
 
         let manifest: ImageManifest = self
             .client
-            .get(&manifest_url)
+            .get(manifest_url)
             .header(
                 reqwest::header::ACCEPT,
                 "application/vnd.docker.distribution.manifest.v2+json",
@@ -123,7 +123,7 @@ impl ImageService {
         path: impl AsRef<Path>,
     ) -> Result<()> {
         for layer in manifest.layers {
-            self.extract_layer(layer, &auth, &path)
+            self.extract_layer(layer, auth, &path)
                 .context("extracting individual layer")?;
         }
 

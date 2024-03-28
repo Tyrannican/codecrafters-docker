@@ -42,6 +42,6 @@ fn main() -> Result<()> {
             runner::run_command(image, exec_command, exec_command_args)?;
             Ok(())
         }
-        _ => Ok(()),
+        _ => anyhow::bail!(format!("{command} is not a valid command yet!")),
     }
 }

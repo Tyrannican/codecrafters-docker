@@ -1,10 +1,11 @@
+use crate::image::ImageService;
 use std::io::Write;
 use std::os::unix::fs;
 
 use anyhow::{Context, Result};
 use tempfile::TempDir;
 
-fn setup_chroot(dir: &str, command: &str) -> Result<()> {
+fn setup_chroot(dir: &str, image: &str, command: &str) -> Result<()> {
     let tmp_dir = TempDir::new()
         .context("creating temporary dir")?
         .into_path();
@@ -27,6 +28,9 @@ fn setup_chroot(dir: &str, command: &str) -> Result<()> {
 
     std::fs::copy(&command, bin.join(&bin_name)).context("copying binary over")?;
 
+    let is = ImageService::new(image);
+    is.download_image(&root)
+        .context("attempting to download image")?;
     fs::chroot(&root).context("chrooting")?;
     std::env::set_current_dir("/").context("setting current directory to chroot")?;
 
@@ -39,8 +43,8 @@ fn setup_chroot(dir: &str, command: &str) -> Result<()> {
     Ok(())
 }
 
-pub(crate) fn run_command(command: &str, command_args: &[String]) -> Result<()> {
-    setup_chroot("dockersandbox", command)?;
+pub(crate) fn run_command(image: &str, command: &str, command_args: &[String]) -> Result<()> {
+    setup_chroot("dockersandbox", image, command)?;
     let exec = std::process::Command::new(&command)
         .args(command_args)
         .output()

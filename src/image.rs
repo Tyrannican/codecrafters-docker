@@ -10,25 +10,13 @@ const PUBLIC_REGISTRY: &str = "https://registry.hub.docker.com/v2";
 const AUTH_SERVICE: &str = "registry.docker.io";
 const AUTH_TARGET: &str = "https://auth.docker.io/token";
 
-#[allow(dead_code)]
 #[derive(Debug, Deserialize)]
 pub(crate) struct AuthToken {
     token: String,
-    expires_in: u32,
-    issued_at: String,
 }
 
-#[allow(dead_code)]
 #[derive(Deserialize, Debug)]
 pub(crate) struct ImageManifest {
-    #[serde(rename = "schemaVersion")]
-    pub(crate) schema_version: u8,
-
-    #[serde(rename = "mediaType")]
-    pub(crate) media_type: String,
-
-    pub(crate) config: ImageConfig,
-
     pub(crate) layers: Vec<ImageConfig>,
 }
 
